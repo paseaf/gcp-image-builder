@@ -8,6 +8,10 @@ on:
 
 jobs:
   build-image:
+    # Add "id-token" with the intended permissions.
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     name: Build GCP disk images
     runs-on: ubuntu-latest
     steps:
