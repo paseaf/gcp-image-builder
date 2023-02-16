@@ -36,7 +36,7 @@ rm -rf /var/log/unattended-upgrades;
 apt-get -y purge unattended-upgrades ubuntu-release-upgrader-core;
 
 echo "update the package list"
-apt-get -y update;
+apt-get update;
 
 echo "upgrade all installed packages incl. kernel and kernel headers"
 apt-get -y dist-upgrade -o Dpkg::Options::="--force-confnew";

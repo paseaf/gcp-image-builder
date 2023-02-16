@@ -30,5 +30,6 @@ build {
       "./scripts/install_ops_agent.sh",
     ]
     expect_disconnect = true
+    max_retries       = 2
   }
 }
