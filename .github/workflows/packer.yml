@@ -1,0 +1,50 @@
+name: packer
+
+on:
+  push:
+    branches:
+      - "main"
+      - "dev"
+
+jobs:
+  build-image:
+    name: Build GCP disk images
+    runs-on: ubuntu-latest
+    steps:
+      # actions/checkout MUST come before auth
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: "google-github-actions/auth@v1"
+        with:
+          workload_identity_provider: "projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider"
+          service_account: "my-service-account@my-project.iam.gserviceaccount.com"
+        # further steps are automatically authenticated
+
+      - name: Setup `packer`
+        uses: hashicorp/setup-packer@main
+        id: setup
+        with:
+          version: latest
+
+      - name: Run `packer init`
+        id: init
+        run: packer init .
+
+      - name: Run `packer validate`
+        id: validate
+        run: "packer validate ./image.pkr.hcl"
+
+      - name: Run `packer build -force .`
+        id: build
+        run: packer build -force .
+
+env:
+  PKR_VAR_project_id: ${{ secrets.PKR_VAR_project_id }}
+  PKR_VAR_zone: ${{ secrets.PKR_VAR_project_id }}
+  # example: projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+  SERVICE_ACCOUNT: ${{ secrets.SERVICE_ACCOUNT }}
+  # example: my-service-account@my-project.iam.gserviceaccount.com
+  WORK_LOADIDENTITY_PROVIDER: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
