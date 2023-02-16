@@ -1,5 +1,7 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
+# debug
+# set -x
 export DEBIAN_FRONTEND=noninteractive
 
 curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh

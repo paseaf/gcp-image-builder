@@ -1,6 +1,8 @@
 #!/bin/bash
 # Cowrie installation scripts based on https://cowrie.readthedocs.io/en/latest/INSTALL.html
-set -euxo pipefail
+set -euo pipefail
+# debug
+# set -x
 
 source /var/tmp/scripts/apt_get_wait_lock.sh
 export DEBIAN_FRONTEND=noninteractive

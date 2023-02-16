@@ -2,7 +2,9 @@
 # This script is adapted from
 # https://github.com/chef/bento/blob/main/packer_templates/ubuntu/scripts/update.sh
 
-set -euxo pipefail
+set -euo pipefail
+# debug
+# set -x
 
 source /var/tmp/scripts/apt_get_wait_lock.sh
 
