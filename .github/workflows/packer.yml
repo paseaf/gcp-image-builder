@@ -1,6 +1,8 @@
 name: build-packer-images
 run-name: Building Packer Images on GCP
 on:
+  schedule:
+    - cron: '35 2 * * *'
   push:
     branches:
       - "main"
