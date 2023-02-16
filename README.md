@@ -32,17 +32,32 @@ https://github.com/marketplace/actions/authenticate-to-google-cloud#setup
 1. Set up GCP for GitHub Actions
 
 ```bash
-export PROJECT_ID="my-project" # update with your value
+export PROJECT_ID="$(gcloud config get project)" # use gcloud default project
 export POOL_NAME=github
 export PROVIDER=github-actions
 
 # 1. set service_account
-export SERVICE_ACCOUNT=<service_account>
-# Use an existing service account
+# Create a service account and grant permissions for Packer
+export SERVICE_ACCOUNT_NAME=github-actions
+gcloud iam service-accounts create "$SERVICE_ACCOUNT_NAME" \
+    --description="service account for running github actions" \
+    --display-name="GitHub Actions" \
+    --project "$PROJECT_ID"
+
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:"$SERVICE_ACCOUNT_NAME"@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/compute.instanceAdmin.v1"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:$SERVICE_ACCOUNT_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/iam.serviceAccountUser"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:$SERVICE_ACCOUNT_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role=roles/iap.tunnelResourceAccessor
+
+# Get service account
 gcloud iam service-accounts list
-# OR create service account
-gcloud iam service-accounts create "my-service-account" \
-  --project "${PROJECT_ID}"
+# Set
+export SERVICE_ACCOUNT=$(gcloud iam service-accounts list | grep "GitHub Actions" | awk '{print $3}')
 
 
 # 2. enable IAM crednetials API
@@ -61,7 +76,9 @@ gcloud iam workload-identity-pools describe "$POOL_NAME" \
   --location="global" \
   --format="value(name)"
 
-export WORKLOAD_IDENTITY_POOL_ID=<identity-pool-id>
+export WORKLOAD_IDENTITY_POOL_ID=$(gcloud iam workload-identity-pools list \
+  --location=global | grep -C 1 "GitHub Actions" | grep name | awk '{print $2}')
+echo $WORKLOAD_IDENTITY_POOL_ID
 
 # 5. Create a Workload Identity Provider in that pool:
 gcloud iam workload-identity-pools providers create-oidc "$PROVIDER" \
@@ -74,7 +91,7 @@ gcloud iam workload-identity-pools providers create-oidc "$PROVIDER" \
 
 # 6. Allow Authentications
 export REPO="paseaf/gcp-image-builder" # username/repo
-gcloud iam service-accounts add-iam-policy-binding "SERVICE_ACCOUNT" \
+gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT" \
   --project="${PROJECT_ID}" \
   --role="roles/iam.workloadIdentityUser" \
   --member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository/${REPO}"
@@ -83,18 +100,19 @@ gcloud iam service-accounts add-iam-policy-binding "SERVICE_ACCOUNT" \
 2. Get Values for GitHub Secrets
 
 ```bash
-# Get WORKLOAD_IDENTITY_PROVIDER
-gcloud iam workload-identity-pools providers describe "PROVIDER" \
-  --project="${PROJECT_ID}" \
+echo "# WORKLOAD_IDENTITY_PROVIDER:"
+gcloud iam workload-identity-pools providers describe "$PROVIDER" \
+  --project="$PROJECT_ID" \
   --location="global" \
-  --workload-identity-pool="POOL_NAME" \
+  --workload-identity-pool="$POOL_NAME" \
   --format="value(name)"
 
-# Get SERVICE_ACCOUNT
-gcloud iam service-accounts list
+echo "# SERVICE_ACCOUNT:"
+gcloud iam service-accounts list | grep "GitHub Actions" | awk '{print $3}'
 
-# Get PKR_VAR_project_id
+echo "# PKR_VAR_PROJECT_ID:"
 gcloud config get project
-# Get PKR_VAR_zone
+
+echo "# PKR_VAR_ZONE:"
 gcloud config get compute/zone
 ```
