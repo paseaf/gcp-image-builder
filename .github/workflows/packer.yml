@@ -1,0 +1,57 @@
+name: build-packer-images
+run-name: Building Packer Images on GCP
+on:
+  schedule:
+    - cron: '35 2 * * *'
+  push:
+    branches:
+      - "main"
+      - "dev"
+jobs:
+  build-image:
+    name: Build GCP disk images
+    defaults:
+      run:
+        working-directory: packer
+    # Add "id-token" with the intended permissions.
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    runs-on: ubuntu-latest
+    steps:
+      # actions/checkout MUST come before auth
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: "google-github-actions/auth@v1"
+        with:
+          # example: projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          # example: my-service-account@my-project.iam.gserviceaccount.com
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+        # further steps are automatically authenticated
+
+      - name: Setup `packer`
+        uses: hashicorp/setup-packer@main
+        id: setup
+        with:
+          version: latest
+
+      - name: Run `packer init`
+        id: init
+        run: "packer init ."
+
+      - name: Run `packer validate`
+        id: validate
+        run: "packer validate ."
+
+      - name: Run `packer build -force .`
+        id: build
+        run: "packer build -force ."
+
+env:
+  # for packer
+  PKR_VAR_project_id: ${{ secrets.PKR_VAR_PROJECT_ID }}
+  PKR_VAR_zone: ${{ secrets.PKR_VAR_ZONE }}
