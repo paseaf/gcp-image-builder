@@ -9,9 +9,9 @@ MACHINE_TYPE="e2-medium"
 
 case $INSTANCE_VERSION in
   18)
-    ;;
+    ;&
   20)
-    ;;
+    ;&
   22)
     gcloud compute instances create "$INSTANCE_NAME" \
       --machine-type="$MACHINE_TYPE" \
