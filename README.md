@@ -30,6 +30,7 @@ Prerequisite: `gcloud` and `packer` cli
 
 ```bash
 cd packer
+packer init .
 # use default project and zone
 ./build_all.sh $(gcloud config get project) $(gcloud config get compute/zone)
 ```
@@ -38,6 +39,14 @@ cd packer
 
 > Modified based on:
 > https://github.com/marketplace/actions/authenticate-to-google-cloud#setup
+
+0. Enable APIs
+
+   ```bash
+   gcloud services enable compute.googleapis.com
+   gcloud init
+   gcloud auth application-default login
+   ```
 
 1. Set up GCP authentication for GitHub Actions
 

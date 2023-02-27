@@ -49,7 +49,7 @@ jobs:
 
       - name: Run `packer build -force .`
         id: build
-        run: "packer build -force ."
+        run: "packer build -force -parallel-builds=1 ."
 
 env:
   # for packer
